@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useRef } from 'react';
 import { initialResumeData } from './data/resumeData';
 import { ResumeData, ResumeTheme, AccentColor, SpacingDensity } from './types/resume';
@@ -10,14 +5,13 @@ import { ResumePreview } from './components/ResumePreview';
 import { ResumeControls } from './components/ResumeControls';
 import { ResumeEditor } from './components/ResumeEditor';
 import { BeforeAfterModal } from './components/BeforeAfterModal';
+import { PdfViewerModal } from './components/PdfViewerModal';
 import {
   calculateResumeWordCount,
   calculateAtsScore,
   estimatePageFillPercentage,
 } from './utils/resumeMetrics';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-import { CheckCircle2, Download, AlertCircle, FileText, Sparkles, ExternalLink } from 'lucide-react';
+import { CheckCircle2, Download, Eye, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState<ResumeData>(initialResumeData);
@@ -26,7 +20,7 @@ export default function App() {
   const [density, setDensity] = useState<SpacingDensity>('balanced');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isBeforeAfterOpen, setIsBeforeAfterOpen] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
   const resumeRef = useRef<HTMLDivElement>(null);
@@ -34,51 +28,6 @@ export default function App() {
   const wordCount = calculateResumeWordCount(data);
   const atsAssessment = calculateAtsScore(data);
   const fillPercentage = estimatePageFillPercentage(data, density);
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  // High-Resolution 1-Page PDF Generation
-  const handleDownloadPdf = async () => {
-    setIsDownloading(true);
-    try {
-      const element = document.getElementById('resume-printable-page');
-      if (!element) {
-        throw new Error('Resume element not found');
-      }
-
-      // Generate canvas at 2.5x resolution for crisp high-DPI text rendering
-      const canvas = await html2canvas(element, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1200,
-      });
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true,
-      });
-
-      // Exactly 210mm x 297mm (Standard A4)
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
-      pdf.save('Pratik_Surya_Refined_Executive_Resume.pdf');
-
-      showNotification('Success! Pratik_Surya_Refined_Executive_Resume.pdf downloaded.');
-    } catch (err) {
-      console.error('PDF export failed:', err);
-      // Fallback to print
-      window.print();
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   const handlePrint = () => {
     window.print();
@@ -94,15 +43,15 @@ export default function App() {
         setAccentColor={setAccentColor}
         density={density}
         setDensity={setDensity}
-        onDownloadPdf={handleDownloadPdf}
+        onOpenPdfViewer={() => setIsPdfViewerOpen(true)}
         onPrint={handlePrint}
-        isDownloading={isDownloading}
         onOpenBeforeAfter={() => setIsBeforeAfterOpen(true)}
         onToggleEditor={() => setIsEditorOpen(!isEditorOpen)}
         isEditorOpen={isEditorOpen}
         atsScore={atsAssessment.score}
         wordCount={wordCount}
         fillPercentage={fillPercentage}
+        pdfUrl="/pratik_surya_full_resume.pdf?v=2"
       />
 
       {/* Floating Notification Toast */}
@@ -123,13 +72,21 @@ export default function App() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href="/pratik_surya_refined_resume.pdf"
-              download="Pratik_Surya_Refined_Resume.pdf"
+            <button
+              onClick={() => setIsPdfViewerOpen(true)}
               className="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-medium hover:underline"
             >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Preview PDF Document</span>
+            </button>
+            <span className="text-slate-600">|</span>
+            <a
+              href="/pratik_surya_full_resume.pdf?v=2"
+              download="Pratik_Surya_Refined_Resume.pdf"
+              className="inline-flex items-center gap-1.5 text-slate-300 hover:text-white font-medium hover:underline"
+            >
               <Download className="w-3.5 h-3.5" />
-              <span>Direct Pre-Rendered PDF</span>
+              <span>Direct Download Full PDF</span>
             </a>
             <span className="text-slate-600">|</span>
             <button
@@ -148,7 +105,7 @@ export default function App() {
         <div className="no-print mb-4 flex items-center gap-3 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 px-4 py-2 rounded-full">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span>
-            Preview mode active. To export as vector PDF, use <strong>Download PDF</strong> or press <strong>Ctrl/Cmd + P</strong> with <i>Save as PDF</i>.
+            Preview mode active. To export as vector PDF, click <strong>Download PDF</strong> or press <strong>Ctrl/Cmd + P</strong> with <i>Save as PDF</i>.
           </span>
         </div>
 
@@ -215,6 +172,13 @@ export default function App() {
       <BeforeAfterModal
         isOpen={isBeforeAfterOpen}
         onClose={() => setIsBeforeAfterOpen(false)}
+      />
+
+      {/* Embedded PDF Viewer Modal */}
+      <PdfViewerModal
+        isOpen={isPdfViewerOpen}
+        onClose={() => setIsPdfViewerOpen(false)}
+        pdfUrl="/pratik_surya_full_resume.pdf?v=2"
       />
     </div>
   );

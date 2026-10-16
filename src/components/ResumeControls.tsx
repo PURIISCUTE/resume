@@ -20,15 +20,15 @@ interface ResumeControlsProps {
   setAccentColor: (c: AccentColor) => void;
   density: SpacingDensity;
   setDensity: (d: SpacingDensity) => void;
-  onDownloadPdf: () => void;
+  onOpenPdfViewer: () => void;
   onPrint: () => void;
-  isDownloading: boolean;
   onOpenBeforeAfter: () => void;
   onToggleEditor: () => void;
   isEditorOpen: boolean;
   atsScore: number;
   wordCount: number;
   fillPercentage: number;
+  pdfUrl?: string;
 }
 
 export const ResumeControls: React.FC<ResumeControlsProps> = ({
@@ -38,15 +38,15 @@ export const ResumeControls: React.FC<ResumeControlsProps> = ({
   setAccentColor,
   density,
   setDensity,
-  onDownloadPdf,
+  onOpenPdfViewer,
   onPrint,
-  isDownloading,
   onOpenBeforeAfter,
   onToggleEditor,
   isEditorOpen,
   atsScore,
   wordCount,
   fillPercentage,
+  pdfUrl = '/pratik_surya_refined_resume.pdf',
 }) => {
   return (
     <div className="no-print bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 sm:px-6">
@@ -235,6 +235,15 @@ export const ResumeControls: React.FC<ResumeControlsProps> = ({
             <span>{isEditorOpen ? 'Close Editor' : 'Edit CV'}</span>
           </button>
 
+          {/* Inspect / View PDF in Modal */}
+          <button
+            onClick={onOpenPdfViewer}
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>View PDF</span>
+          </button>
+
           {/* Print / Save as PDF */}
           <button
             onClick={onPrint}
@@ -245,15 +254,15 @@ export const ResumeControls: React.FC<ResumeControlsProps> = ({
             <span className="hidden sm:inline">Print</span>
           </button>
 
-          {/* High-Res Direct Download Button */}
-          <button
-            onClick={onDownloadPdf}
-            disabled={isDownloading}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold px-4 py-1.5 rounded-lg text-xs shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-50"
+          {/* Guaranteed Direct High-Res PDF Download Link */}
+          <a
+            href={pdfUrl}
+            download="Pratik_Surya_Refined_Resume.pdf"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold px-4 py-1.5 rounded-lg text-xs shadow-lg shadow-indigo-600/25 transition-all"
           >
-            <Download className={`w-3.5 h-3.5 ${isDownloading ? 'animate-bounce' : ''}`} />
-            <span>{isDownloading ? 'Rendering PDF...' : 'Download PDF'}</span>
-          </button>
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </a>
         </div>
       </div>
     </div>
